@@ -16,12 +16,7 @@
 
 package net.dv8tion.jda.internal.handle;
 
-import gnu.trove.iterator.TLongIterator;
-import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
 import net.dv8tion.jda.api.audio.hooks.ConnectionListener;
 import net.dv8tion.jda.api.audio.hooks.ConnectionStatus;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
@@ -38,6 +33,9 @@ import net.dv8tion.jda.internal.managers.AudioManagerImpl;
 import net.dv8tion.jda.internal.utils.EntityString;
 import net.dv8tion.jda.internal.utils.UnlockHook;
 import net.dv8tion.jda.internal.utils.cache.AbstractCacheView;
+import org.agrona.collections.Hashing;
+import org.agrona.collections.Long2ObjectHashMap;
+import org.agrona.collections.LongHashSet;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -52,8 +50,8 @@ public class GuildSetupNode {
     @SuppressWarnings("JdkObsolete")
     private final List<DataObject> cachedEvents = new LinkedList<>();
 
-    private TLongObjectMap<DataObject> members;
-    private TLongSet removedMembers;
+    private Long2ObjectHashMap<DataObject> members;
+    private LongHashSet removedMembers;
     private DataObject partialGuild;
     private int expectedMemberCount = 1;
     boolean requestedChunk;
@@ -91,7 +89,8 @@ public class GuildSetupNode {
     }
 
     public int getCurrentMemberCount() {
-        TLongHashSet knownMembers = new TLongHashSet(members.keySet());
+        LongHashSet knownMembers = new LongHashSet(members.size());
+        knownMembers.addAll(members.keySet());
         knownMembers.removeAll(removedMembers);
         return knownMembers.size();
     }
@@ -315,9 +314,7 @@ public class GuildSetupNode {
         });
 
         if (members != null) {
-            for (TLongObjectIterator<DataObject> it = members.iterator(); it.hasNext(); ) {
-                it.advance();
-                long userId = it.key();
+            for (long userId : members.keySet()) {
                 if (!getController().containsMember(userId, this)) {
                     // if no other setup node contains this userId we clear it here
                     eventCache.clear(EventCache.Type.USER, userId);
@@ -329,8 +326,8 @@ public class GuildSetupNode {
     private void completeSetup() {
         updateStatus(GuildSetupController.Status.BUILDING);
         JDAImpl api = getController().getJDA();
-        for (TLongIterator it = removedMembers.iterator(); it.hasNext(); ) {
-            members.remove(it.next());
+        for (long userId : removedMembers) {
+            members.remove(userId);
         }
         removedMembers.clear();
         GuildImpl guild = api.getEntityBuilder().createGuild(id, partialGuild, members, expectedMemberCount);
@@ -361,8 +358,8 @@ public class GuildSetupNode {
 
     private void ensureMembers() {
         expectedMemberCount = partialGuild.getInt("member_count");
-        members = new TLongObjectHashMap<>(expectedMemberCount);
-        removedMembers = new TLongHashSet();
+        members = new Long2ObjectHashMap<>(expectedMemberCount, Hashing.DEFAULT_LOAD_FACTOR);
+        removedMembers = new LongHashSet();
         DataArray memberArray = partialGuild.getArray("members");
         if (!getController().getJDA().chunkGuild(id)) {
             handleMemberChunk(true, memberArray);

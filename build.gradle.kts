@@ -211,6 +211,7 @@ dependencies {
     /* Internal dependencies */
 
     //General Utility
+    implementation(libs.agrona)
     implementation(libs.trove4j)
     implementation(libs.bundles.jackson)
 
@@ -474,7 +475,7 @@ val javadoc by tasks.getting(Javadoc::class) {
         links("https://docs.oracle.com/en/java/javase/$currentJavaVersion/docs/api/", "https://takahikokawasaki.github.io/nv-websocket-client/")
 
         addStringOption("-link-modularity-mismatch", "info")
-        addStringOption("-release", "8")
+        addStringOption("-release", "17")
         addBooleanOption("-syntax-highlight", true)
         addBooleanOption("Xdoclint:all,-missing", true)
 
@@ -544,7 +545,7 @@ val compileJava by tasks.getting(JavaCompile::class) {
     dependsOn(generateJavaSources)
     source = generateJavaSources.get().source
 
-    options.release = 8
+    options.release = 17
 }
 
 tasks.named<JavaCompile>("compileTestJava8Java") {
@@ -637,7 +638,7 @@ tasks.named("check").configure {
 val verifyBytecodeVersion by tasks.registering(VerifyBytecodeVersion::class) {
     group = "verification"
 
-    expectedMajorVersion = 52
+    expectedMajorVersion = 61
     classes.from(compileJava.outputs.files.asFileTree.matching {
         include("**/*.class")
     })

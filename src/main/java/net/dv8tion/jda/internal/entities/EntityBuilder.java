@@ -81,6 +81,7 @@ import net.dv8tion.jda.internal.utils.UnlockHook;
 import net.dv8tion.jda.internal.utils.cache.ChannelCacheViewImpl;
 import net.dv8tion.jda.internal.utils.cache.MemberCacheViewImpl;
 import net.dv8tion.jda.internal.utils.cache.SnowflakeCacheViewImpl;
+import org.agrona.collections.Long2ObjectHashMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.slf4j.Logger;
@@ -318,7 +319,7 @@ public class EntityBuilder extends AbstractEntityBuilder {
     }
 
     public GuildImpl createGuild(
-            long guildId, DataObject guildJson, TLongObjectMap<DataObject> members, int memberCount) {
+            long guildId, DataObject guildJson, Long2ObjectHashMap<DataObject> members, int memberCount) {
         GuildImpl guildObj = new GuildImpl(getJDA(), guildId);
         String name = guildJson.getString("name", "");
         String iconId = guildJson.getString("icon", null);
@@ -427,7 +428,7 @@ public class EntityBuilder extends AbstractEntityBuilder {
                 UnlockHook h2 = getJDA().getUsersView().writeLock()) {
             // Add members to cache when subscriptions are disabled when they appear here
             // this is done because we can still keep track of members in voice channels
-            for (DataObject memberJson : members.valueCollection()) {
+            for (DataObject memberJson : members.values()) {
                 long userId = memberJson.getObject("user").getUnsignedLong("id");
                 DataObject voiceState = voiceStates.get(userId);
                 DataObject presence = presences.get(userId);
