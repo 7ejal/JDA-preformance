@@ -29,6 +29,7 @@ import org.agrona.collections.Long2ObjectHashMap;
 import org.agrona.collections.LongHashSet;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -56,52 +57,52 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
     }
 
     @Override
-    public int size() {
+    public synchronized int size() {
         return delegate.size();
     }
 
     @Override
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return delegate.isEmpty();
     }
 
     @Override
-    public boolean containsKey(long key) {
+    public synchronized boolean containsKey(long key) {
         return delegate.containsKey(key);
     }
 
     @Override
-    public boolean containsValue(Object value) {
+    public synchronized boolean containsValue(Object value) {
         return delegate.containsValue(value);
     }
 
     @Override
-    public V get(long key) {
+    public synchronized V get(long key) {
         return delegate.get(key);
     }
 
     @Override
-    public V put(long key, V value) {
+    public synchronized V put(long key, V value) {
         return delegate.put(key, value);
     }
 
     @Override
-    public V putIfAbsent(long key, V value) {
+    public synchronized V putIfAbsent(long key, V value) {
         return delegate.putIfAbsent(key, value);
     }
 
     @Override
-    public V remove(long key) {
+    public synchronized V remove(long key) {
         return delegate.remove(key);
     }
 
     @Override
-    public void putAll(Map<? extends Long, ? extends V> map) {
+    public synchronized void putAll(Map<? extends Long, ? extends V> map) {
         map.forEach((key, value) -> delegate.put(key.longValue(), value));
     }
 
     @Override
-    public void putAll(TLongObjectMap<? extends V> map) {
+    public synchronized void putAll(TLongObjectMap<? extends V> map) {
         for (TLongObjectIterator<? extends V> it = map.iterator(); it.hasNext(); ) {
             it.advance();
             delegate.put(it.key(), it.value());
@@ -109,12 +110,12 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
     }
 
     @Override
-    public void clear() {
+    public synchronized void clear() {
         delegate.clear();
     }
 
     @Override
-    public TLongSet keySet() {
+    public synchronized TLongSet keySet() {
         LongHashSet keys = new LongHashSet(Math.max(1, delegate.size()));
         delegate.keySet().forEach(keys::add);
         return new AgronaLongSet(keys);
@@ -131,28 +132,28 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
     }
 
     @Override
-    public Collection<V> valueCollection() {
-        return delegate.values();
+    public synchronized Collection<V> valueCollection() {
+        return new ArrayList<>(delegate.values());
     }
 
     @Override
-    public Object[] values() {
+    public synchronized Object[] values() {
         return delegate.values().toArray();
     }
 
     @Override
-    public V[] values(V[] array) {
+    public synchronized V[] values(V[] array) {
         return delegate.values().toArray(array);
     }
 
     @Override
-    public TLongObjectIterator<V> iterator() {
-        return new EntryIterator<>(delegate.entrySet().iterator());
+    public synchronized TLongObjectIterator<V> iterator() {
+        return new EntryIterator<>(new ArrayList<>(delegate.entrySet()).iterator());
     }
 
     @Override
     public boolean forEachKey(TLongProcedure procedure) {
-        for (long key : delegate.keySet()) {
+        for (long key : keys()) {
             if (!procedure.execute(key)) {
                 return false;
             }
@@ -162,7 +163,7 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
 
     @Override
     public boolean forEachValue(TObjectProcedure<? super V> procedure) {
-        for (V value : delegate.values()) {
+        for (V value : valueCollection()) {
             if (!procedure.execute(value)) {
                 return false;
             }
@@ -172,8 +173,10 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
 
     @Override
     public boolean forEachEntry(TLongObjectProcedure<? super V> procedure) {
-        for (Map.Entry<Long, V> entry : delegate.entrySet()) {
-            if (!procedure.execute(entry.getKey(), entry.getValue())) {
+        TLongObjectIterator<V> it = iterator();
+        while (it.hasNext()) {
+            it.advance();
+            if (!procedure.execute(it.key(), it.value())) {
                 return false;
             }
         }
@@ -181,12 +184,12 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
     }
 
     @Override
-    public void transformValues(TObjectFunction<V, V> function) {
+    public synchronized void transformValues(TObjectFunction<V, V> function) {
         delegate.replaceAllLong((key, value) -> function.execute(value));
     }
 
     @Override
-    public boolean retainEntries(TLongObjectProcedure<? super V> procedure) {
+    public synchronized boolean retainEntries(TLongObjectProcedure<? super V> procedure) {
         boolean changed = false;
         Iterator<Map.Entry<Long, V>> iterator = delegate.entrySet().iterator();
         while (iterator.hasNext()) {

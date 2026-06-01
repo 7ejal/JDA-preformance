@@ -46,7 +46,14 @@ public class SortedChannelCacheViewImpl<T extends Channel & Comparable<? super T
     public List<T> asList() {
         List<T> list = getCachedList();
         if (list == null) {
-            list = cache(new ArrayList<>(asSet()));
+            try (UnlockHook hook = readLock()) {
+                List<T> newList = new ArrayList<>(totalSize());
+                for (var cache : caches.values()) {
+                    cache.forEachValue(newList::add);
+                }
+                newList.sort(Comparator.naturalOrder());
+                list = cache(newList);
+            }
         }
         return list;
     }
@@ -56,7 +63,13 @@ public class SortedChannelCacheViewImpl<T extends Channel & Comparable<? super T
     public NavigableSet<T> asSet() {
         NavigableSet<T> set = (NavigableSet<T>) getCachedSet();
         if (set == null) {
-            set = cache((NavigableSet<T>) applyStream(stream -> stream.collect(Collectors.toCollection(TreeSet::new))));
+            try (UnlockHook hook = readLock()) {
+                NavigableSet<T> newSet = new TreeSet<>();
+                for (var cache : caches.values()) {
+                    cache.forEachValue(newSet::add);
+                }
+                set = cache(newSet);
+            }
         }
         return set;
     }
@@ -116,7 +129,17 @@ public class SortedChannelCacheViewImpl<T extends Channel & Comparable<? super T
         @Nonnull
         @Override
         public List<C> asList() {
-            return applyStream(stream -> stream.sorted().collect(Helpers.toUnmodifiableList()));
+            if (isEmpty()) {
+                return Collections.emptyList();
+            }
+            try (UnlockHook hook = readLock()) {
+                List<C> list = new ArrayList<>((int) Math.min(Integer.MAX_VALUE, size()));
+                for (var map : filteredMaps) {
+                    map.forEachValue(list::add);
+                }
+                list.sort(Comparator.naturalOrder());
+                return Collections.unmodifiableList(list);
+            }
         }
 
         @Nonnull

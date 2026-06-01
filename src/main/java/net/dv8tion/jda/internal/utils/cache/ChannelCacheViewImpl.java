@@ -116,7 +116,13 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     public List<T> asList() {
         List<T> list = getCachedList();
         if (list == null) {
-            List<T> newList = applyStream(stream -> stream.collect(Collectors.toList()));
+            List<T> newList;
+            try (UnlockHook hook = readLock()) {
+                newList = new ArrayList<>(totalSize());
+                for (TLongObjectMap<T> cache : caches.values()) {
+                    cache.forEachValue(newList::add);
+                }
+            }
             list = cache(newList);
         }
         return list;
@@ -127,7 +133,13 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     public Set<T> asSet() {
         Set<T> set = getCachedSet();
         if (set == null) {
-            Set<T> newSet = applyStream(stream -> stream.collect(Collectors.toSet()));
+            Set<T> newSet;
+            try (UnlockHook hook = readLock()) {
+                newSet = new HashSet<>(Math.max(16, totalSize() * 4 / 3 + 1));
+                for (TLongObjectMap<T> cache : caches.values()) {
+                    cache.forEachValue(newSet::add);
+                }
+            }
             set = cache(newSet);
         }
         return set;
@@ -152,14 +164,19 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     @Override
     public long size() {
         try (UnlockHook hook = readLock()) {
-            return caches.values().stream().mapToLong(TLongObjectMap::size).sum();
+            return totalSize();
         }
     }
 
     @Override
     public boolean isEmpty() {
         try (UnlockHook hook = readLock()) {
-            return caches.values().stream().allMatch(TLongObjectMap::isEmpty);
+            for (TLongObjectMap<T> cache : caches.values()) {
+                if (!cache.isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
@@ -275,14 +292,23 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
         @Override
         public long size() {
             try (UnlockHook hook = readLock()) {
-                return filteredMaps.stream().mapToLong(TLongObjectMap::size).sum();
+                long size = 0;
+                for (TLongObjectMap<C> map : filteredMaps) {
+                    size += map.size();
+                }
+                return size;
             }
         }
 
         @Override
         public boolean isEmpty() {
             try (UnlockHook hook = readLock()) {
-                return filteredMaps.stream().allMatch(TLongObjectMap::isEmpty);
+                for (TLongObjectMap<C> map : filteredMaps) {
+                    if (!map.isEmpty()) {
+                        return false;
+                    }
+                }
+                return true;
             }
         }
 
@@ -323,11 +349,13 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
         @Override
         public C getElementById(long id) {
             try (UnlockHook hook = readLock()) {
-                return filteredMaps.stream()
-                        .map(it -> it.get(id))
-                        .filter(Objects::nonNull)
-                        .findFirst()
-                        .orElse(null);
+                for (TLongObjectMap<C> map : filteredMaps) {
+                    C element = map.get(id);
+                    if (element != null) {
+                        return element;
+                    }
+                }
+                return null;
             }
         }
 
@@ -336,5 +364,13 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
         public Iterator<C> iterator() {
             return asList().iterator();
         }
+    }
+
+    protected int totalSize() {
+        long size = 0;
+        for (TLongObjectMap<T> cache : caches.values()) {
+            size += cache.size();
+        }
+        return size > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) size;
     }
 }
