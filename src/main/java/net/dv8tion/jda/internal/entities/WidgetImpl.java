@@ -17,7 +17,7 @@
 package net.dv8tion.jda.internal.entities;
 
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Widget;
@@ -52,8 +52,8 @@ public class WidgetImpl implements Widget {
         id = guildId;
         name = null;
         invite = null;
-        channels = new TLongObjectHashMap<>();
-        members = new TLongObjectHashMap<>();
+        channels = new AgronaLongObjectMap<>();
+        members = new AgronaLongObjectMap<>();
     }
 
     /**

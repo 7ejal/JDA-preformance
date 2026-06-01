@@ -17,7 +17,7 @@
 package net.dv8tion.jda.internal.interactions.command;
 
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -45,7 +45,7 @@ import javax.annotation.Nullable;
 public class CommandInteractionPayloadImpl extends InteractionImpl implements CommandInteractionPayload {
     private final long commandId;
     private final List<OptionMapping> options = new ArrayList<>();
-    private final TLongObjectMap<Object> resolved = new TLongObjectHashMap<>();
+    private final TLongObjectMap<Object> resolved = new AgronaLongObjectMap<>();
     private final String name;
     private final boolean isGuildCommand;
     private String subcommand;

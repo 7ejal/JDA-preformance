@@ -17,7 +17,7 @@
 package net.dv8tion.jda.internal.handle;
 
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import net.dv8tion.jda.api.utils.data.DataObject;
@@ -37,7 +37,7 @@ public class ReadyHandler extends SocketHandler {
 
         DataArray guilds = content.getArray("guilds");
         // Make sure we don't have any duplicates here!
-        TLongObjectMap<DataObject> distinctGuilds = new TLongObjectHashMap<>();
+        TLongObjectMap<DataObject> distinctGuilds = new AgronaLongObjectMap<>();
         for (int i = 0; i < guilds.length(); i++) {
             DataObject guild = guilds.getObject(i);
             long id = guild.getUnsignedLong("id");

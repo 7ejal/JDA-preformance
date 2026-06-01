@@ -18,7 +18,7 @@ package net.dv8tion.jda.internal.handle;
 
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.utils.CacheConsumer;
 import net.dv8tion.jda.internal.utils.JDALogger;
@@ -75,7 +75,7 @@ public class EventCache {
     public synchronized void cache(
             Type type, long triggerId, long responseTotal, DataObject event, CacheConsumer handler) {
         TLongObjectMap<List<CacheNode>> triggerCache =
-                eventCache.computeIfAbsent(type, k -> new TLongObjectHashMap<>());
+                eventCache.computeIfAbsent(type, k -> new AgronaLongObjectMap<>());
 
         List<CacheNode> items = triggerCache.get(triggerId);
         if (items == null) {

@@ -19,7 +19,7 @@ package net.dv8tion.jda.internal.entities;
 import gnu.trove.map.TLongIntMap;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongIntHashMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import gnu.trove.set.TLongSet;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.Region;
@@ -1298,7 +1298,7 @@ public class GuildImpl implements Guild {
             List<ThreadChannel> list = new ArrayList<>(threads.length());
             EntityBuilder builder = api.getEntityBuilder();
 
-            TLongObjectMap<DataObject> selfThreadMemberMap = new TLongObjectHashMap<>();
+            TLongObjectMap<DataObject> selfThreadMemberMap = new AgronaLongObjectMap<>();
             for (int i = 0; i < selfThreadMembers.length(); i++) {
                 DataObject selfThreadMember = selfThreadMembers.getObject(i);
 

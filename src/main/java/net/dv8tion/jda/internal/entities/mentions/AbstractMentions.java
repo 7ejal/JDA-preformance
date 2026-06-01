@@ -17,7 +17,7 @@
 package net.dv8tion.jda.internal.entities.mentions;
 
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
@@ -236,7 +236,7 @@ public abstract class AbstractMentions implements Mentions {
                     mentions.addAll(getChannels());
                     break;
                 case USER:
-                    TLongObjectMap<IMentionable> set = new TLongObjectHashMap<>();
+                    TLongObjectMap<IMentionable> set = new AgronaLongObjectMap<>();
                     for (User u : getUsers()) {
                         set.put(u.getIdLong(), u);
                     }

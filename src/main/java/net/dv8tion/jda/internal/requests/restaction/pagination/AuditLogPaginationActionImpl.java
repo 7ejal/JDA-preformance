@@ -17,7 +17,7 @@
 package net.dv8tion.jda.internal.requests.restaction.pagination;
 
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
@@ -107,13 +107,13 @@ public class AuditLogPaginationActionImpl extends PaginationActionImpl<AuditLogE
         List<AuditLogEntry> list = new ArrayList<>(entries.length());
         EntityBuilder builder = api.getEntityBuilder();
 
-        TLongObjectMap<DataObject> userMap = new TLongObjectHashMap<>();
+        TLongObjectMap<DataObject> userMap = new AgronaLongObjectMap<>();
         for (int i = 0; i < users.length(); i++) {
             DataObject user = users.getObject(i);
             userMap.put(user.getLong("id"), user);
         }
 
-        TLongObjectMap<DataObject> webhookMap = new TLongObjectHashMap<>();
+        TLongObjectMap<DataObject> webhookMap = new AgronaLongObjectMap<>();
         for (int i = 0; i < webhooks.length(); i++) {
             DataObject webhook = webhooks.getObject(i);
             webhookMap.put(webhook.getLong("id"), webhook);

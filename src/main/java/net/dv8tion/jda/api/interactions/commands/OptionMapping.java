@@ -17,7 +17,7 @@
 package net.dv8tion.jda.api.interactions.commands;
 
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -59,7 +59,7 @@ public class OptionMapping {
         if (type == OptionType.STRING) {
             mentions = new InteractionMentions(getAsString(), resolved, (JDAImpl) jda, guild);
         } else {
-            mentions = new InteractionMentions("", new TLongObjectHashMap<>(0), (JDAImpl) jda, guild);
+            mentions = new InteractionMentions("", new AgronaLongObjectMap<>(0), (JDAImpl) jda, guild);
         }
     }
 

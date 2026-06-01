@@ -18,11 +18,11 @@ package net.dv8tion.jda.api.utils;
 
 import gnu.trove.impl.sync.TSynchronizedLongObjectMap;
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
 import net.dv8tion.jda.annotations.UnknownNullability;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.internal.utils.Checks;
 import net.dv8tion.jda.internal.utils.Helpers;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -102,7 +102,7 @@ public class MiscUtil {
      */
     @Nonnull
     public static <T> TLongObjectMap<T> newLongMap() {
-        return new TSynchronizedLongObjectMap<>(new TLongObjectHashMap<T>(), new Object());
+        return new TSynchronizedLongObjectMap<>(new AgronaLongObjectMap<T>(), new Object());
     }
 
     public static long parseLong(@Nonnull String input) {

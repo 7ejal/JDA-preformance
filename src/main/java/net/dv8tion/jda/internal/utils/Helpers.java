@@ -19,7 +19,7 @@ package net.dv8tion.jda.internal.utils;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.utils.Result;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import net.dv8tion.jda.api.utils.data.DataObject;
@@ -268,7 +268,7 @@ public final class Helpers {
     }
 
     public static TLongObjectMap<DataObject> convertToMap(ToLongFunction<DataObject> getId, DataArray array) {
-        TLongObjectMap<DataObject> map = new TLongObjectHashMap<>();
+        TLongObjectMap<DataObject> map = new AgronaLongObjectMap<>();
         for (int i = 0; i < array.length(); i++) {
             DataObject obj = array.getObject(i);
             long objId = getId.applyAsLong(obj);

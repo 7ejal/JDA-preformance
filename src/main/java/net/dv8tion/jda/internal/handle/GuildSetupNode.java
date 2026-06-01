@@ -37,7 +37,7 @@ import org.agrona.collections.Hashing;
 import org.agrona.collections.Long2ObjectHashMap;
 import org.agrona.collections.LongHashSet;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,8 +47,7 @@ public class GuildSetupNode {
     private final long id;
     private final GuildSetupController controller;
 
-    @SuppressWarnings("JdkObsolete")
-    private final List<DataObject> cachedEvents = new LinkedList<>();
+    private final List<DataObject> cachedEvents = new ArrayList<>();
 
     private Long2ObjectHashMap<DataObject> members;
     private LongHashSet removedMembers;

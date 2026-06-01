@@ -17,7 +17,7 @@
 package net.dv8tion.jda.internal.requests;
 
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.utils.MiscUtil;
 import net.dv8tion.jda.api.utils.data.DataArray;
@@ -37,7 +37,7 @@ public class MemberChunkManager {
     private static final long MAX_CHUNK_AGE = 10 * 1000; // 10 seconds
     private final WebSocketClient client;
     private final ReentrantLock lock = new ReentrantLock();
-    private final TLongObjectMap<ChunkRequest> requests = new TLongObjectHashMap<>();
+    private final TLongObjectMap<ChunkRequest> requests = new AgronaLongObjectMap<>();
     private Future<?> timeoutHandle;
 
     public MemberChunkManager(WebSocketClient client) {
@@ -192,7 +192,7 @@ public class MemberChunkManager {
             DataArray memberArray = chunk.getArray("members");
             TLongObjectMap<DataObject> presences = chunk.optArray("presences")
                     .map(it -> Helpers.convertToMap(o -> o.getObject("user").getUnsignedLong("id"), it))
-                    .orElseGet(TLongObjectHashMap::new);
+                    .orElseGet(AgronaLongObjectMap::new);
             List<Member> collect = new ArrayList<>(memberArray.length());
             for (int i = 0; i < memberArray.length(); i++) {
                 DataObject json = memberArray.getObject(i);

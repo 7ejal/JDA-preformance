@@ -17,7 +17,7 @@
 package net.dv8tion.jda.internal.entities;
 
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.audit.ActionType;
@@ -423,7 +423,7 @@ public class EntityBuilder extends AbstractEntityBuilder {
                 Helpers.convertToMap((o) -> o.getUnsignedLong("user_id", 0L), voiceStateArray);
         TLongObjectMap<DataObject> presences = presencesArray
                 .map(o1 -> Helpers.convertToMap(o2 -> o2.getObject("user").getUnsignedLong("id"), o1))
-                .orElseGet(TLongObjectHashMap::new);
+                .orElseGet(AgronaLongObjectMap::new);
         try (UnlockHook h1 = guildObj.getMembersView().writeLock();
                 UnlockHook h2 = getJDA().getUsersView().writeLock()) {
             // Add members to cache when subscriptions are disabled when they appear here
@@ -1890,7 +1890,7 @@ public class EntityBuilder extends AbstractEntityBuilder {
         boolean isFinalized = resultsData.getBoolean("is_finalized");
 
         DataArray resultVotes = resultsData.getArray("answer_counts");
-        TLongObjectMap<DataObject> voteMapping = new TLongObjectHashMap<>();
+        TLongObjectMap<DataObject> voteMapping = new AgronaLongObjectMap<>();
         resultVotes.stream(DataArray::getObject).forEach(votes -> voteMapping.put(votes.getLong("id"), votes));
 
         MessagePoll.Question question = new MessagePoll.Question(

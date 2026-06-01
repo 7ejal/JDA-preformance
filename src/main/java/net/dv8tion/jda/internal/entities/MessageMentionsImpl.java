@@ -18,7 +18,7 @@ package net.dv8tion.jda.internal.entities;
 
 import gnu.trove.iterator.TLongIterator;
 import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import net.dv8tion.jda.api.entities.*;
@@ -49,7 +49,7 @@ public class MessageMentionsImpl extends AbstractMentions {
             DataArray userMentions,
             DataArray roleMentions) {
         super(content, jda, guild, mentionsEveryone);
-        this.userMentionMap = new TLongObjectHashMap<>(userMentions.length());
+        this.userMentionMap = new AgronaLongObjectMap<>(userMentions.length());
         this.roleMentionMap =
                 new TLongHashSet(roleMentions.stream(DataArray::getUnsignedLong).collect(Collectors.toList()));
 
