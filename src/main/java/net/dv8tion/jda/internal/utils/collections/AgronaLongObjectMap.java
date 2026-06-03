@@ -28,13 +28,18 @@ import org.agrona.collections.Hashing;
 import org.agrona.collections.Long2ObjectHashMap;
 import org.agrona.collections.LongHashSet;
 
+import java.util.AbstractCollection;
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
+/*
+ * Safety-compatible Trove adapter for this private MusicBot fork.
+ * Current standalone benchmark does not prove this is faster than TLongObjectHashMap.
+ */
 public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
     private final Long2ObjectHashMap<V> delegate;
 
@@ -57,52 +62,55 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
     }
 
     @Override
-    public synchronized int size() {
+    public int size() {
         return delegate.size();
     }
 
     @Override
-    public synchronized boolean isEmpty() {
+    public boolean isEmpty() {
         return delegate.isEmpty();
     }
 
     @Override
-    public synchronized boolean containsKey(long key) {
+    public boolean containsKey(long key) {
         return delegate.containsKey(key);
     }
 
     @Override
-    public synchronized boolean containsValue(Object value) {
+    public boolean containsValue(Object value) {
         return delegate.containsValue(value);
     }
 
     @Override
-    public synchronized V get(long key) {
+    public V get(long key) {
         return delegate.get(key);
     }
 
     @Override
-    public synchronized V put(long key, V value) {
+    public V put(long key, V value) {
         return delegate.put(key, value);
     }
 
     @Override
-    public synchronized V putIfAbsent(long key, V value) {
+    public V putIfAbsent(long key, V value) {
         return delegate.putIfAbsent(key, value);
     }
 
     @Override
-    public synchronized V remove(long key) {
+    public V remove(long key) {
         return delegate.remove(key);
     }
 
     @Override
-    public synchronized void putAll(Map<? extends Long, ? extends V> map) {
+    public void putAll(Map<? extends Long, ? extends V> map) {
         map.forEach((key, value) -> delegate.put(key.longValue(), value));
     }
 
     @Override
-    public synchronized void putAll(TLongObjectMap<? extends V> map) {
+    public void putAll(TLongObjectMap<? extends V> map) {
+        if (map == this) {
+            return;
+        }
         for (TLongObjectIterator<? extends V> it = map.iterator(); it.hasNext(); ) {
             it.advance();
             delegate.put(it.key(), it.value());
@@ -110,15 +118,13 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
     }
 
     @Override
-    public synchronized void clear() {
+    public void clear() {
         delegate.clear();
     }
 
     @Override
-    public synchronized TLongSet keySet() {
-        LongHashSet keys = new LongHashSet(Math.max(1, delegate.size()));
-        delegate.keySet().forEach(keys::add);
-        return new AgronaLongSet(keys);
+    public TLongSet keySet() {
+        return new LiveKeySet();
     }
 
     @Override
@@ -132,23 +138,23 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
     }
 
     @Override
-    public synchronized Collection<V> valueCollection() {
-        return new ArrayList<>(delegate.values());
+    public Collection<V> valueCollection() {
+        return new LiveValueCollection();
     }
 
     @Override
-    public synchronized Object[] values() {
+    public Object[] values() {
         return delegate.values().toArray();
     }
 
     @Override
-    public synchronized V[] values(V[] array) {
+    public V[] values(V[] array) {
         return delegate.values().toArray(array);
     }
 
     @Override
-    public synchronized TLongObjectIterator<V> iterator() {
-        return new EntryIterator<>(new ArrayList<>(delegate.entrySet()).iterator());
+    public TLongObjectIterator<V> iterator() {
+        return new EntryIterator<>(delegate.entrySet().iterator());
     }
 
     @Override
@@ -184,12 +190,12 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
     }
 
     @Override
-    public synchronized void transformValues(TObjectFunction<V, V> function) {
+    public void transformValues(TObjectFunction<V, V> function) {
         delegate.replaceAllLong((key, value) -> function.execute(value));
     }
 
     @Override
-    public synchronized boolean retainEntries(TLongObjectProcedure<? super V> procedure) {
+    public boolean retainEntries(TLongObjectProcedure<? super V> procedure) {
         boolean changed = false;
         Iterator<Map.Entry<Long, V>> iterator = delegate.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -267,6 +273,307 @@ public class AgronaLongObjectMap<V> implements TLongObjectMap<V> {
         @Override
         public void remove() {
             iterator.remove();
+        }
+    }
+
+    private final class LiveKeySet implements TLongSet {
+        @Override
+        public long getNoEntryValue() {
+            return getNoEntryKey();
+        }
+
+        @Override
+        public int size() {
+            return AgronaLongObjectMap.this.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return AgronaLongObjectMap.this.isEmpty();
+        }
+
+        @Override
+        public boolean contains(long value) {
+            return AgronaLongObjectMap.this.containsKey(value);
+        }
+
+        @Override
+        public TLongIterator iterator() {
+            return new KeyIterator(delegate.entrySet().iterator());
+        }
+
+        @Override
+        public long[] toArray() {
+            long[] values = new long[size()];
+            int i = 0;
+            for (TLongIterator it = iterator(); it.hasNext(); ) {
+                values[i++] = it.next();
+            }
+            return values;
+        }
+
+        @Override
+        public long[] toArray(long[] array) {
+            long[] values = array.length >= size() ? array : Arrays.copyOf(array, size());
+            int i = 0;
+            for (TLongIterator it = iterator(); it.hasNext(); ) {
+                values[i++] = it.next();
+            }
+            if (values.length > i) {
+                values[i] = getNoEntryValue();
+            }
+            return values;
+        }
+
+        @Override
+        public boolean add(long value) {
+            throw new UnsupportedOperationException("keySet().add is not supported for a map-backed Trove key view");
+        }
+
+        @Override
+        public boolean remove(long value) {
+            if (!contains(value)) {
+                return false;
+            }
+            AgronaLongObjectMap.this.remove(value);
+            return true;
+        }
+
+        @Override
+        public boolean containsAll(Collection<?> collection) {
+            for (Object value : collection) {
+                if (!(value instanceof Long) || !contains((Long) value)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean containsAll(gnu.trove.TLongCollection collection) {
+            for (TLongIterator it = collection.iterator(); it.hasNext(); ) {
+                if (!contains(it.next())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean containsAll(long[] array) {
+            for (long value : array) {
+                if (!contains(value)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean addAll(Collection<? extends Long> collection) {
+            throw new UnsupportedOperationException("keySet().addAll is not supported for a map-backed Trove key view");
+        }
+
+        @Override
+        public boolean addAll(gnu.trove.TLongCollection collection) {
+            throw new UnsupportedOperationException("keySet().addAll is not supported for a map-backed Trove key view");
+        }
+
+        @Override
+        public boolean addAll(long[] array) {
+            throw new UnsupportedOperationException("keySet().addAll is not supported for a map-backed Trove key view");
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> collection) {
+            boolean changed = false;
+            for (TLongIterator it = iterator(); it.hasNext(); ) {
+                long value = it.next();
+                if (!collection.contains(value)) {
+                    it.remove();
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        @Override
+        public boolean retainAll(gnu.trove.TLongCollection collection) {
+            boolean changed = false;
+            for (TLongIterator it = iterator(); it.hasNext(); ) {
+                long value = it.next();
+                if (!collection.contains(value)) {
+                    it.remove();
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        @Override
+        public boolean retainAll(long[] array) {
+            LongHashSet keep = new LongHashSet(Math.max(1, array.length));
+            for (long value : array) {
+                keep.add(value);
+            }
+            return retainAll(new AgronaLongSet(keep));
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> collection) {
+            boolean changed = false;
+            for (Object value : collection) {
+                if (value instanceof Long) {
+                    changed |= remove((Long) value);
+                }
+            }
+            return changed;
+        }
+
+        @Override
+        public boolean removeAll(gnu.trove.TLongCollection collection) {
+            boolean changed = false;
+            for (TLongIterator it = collection.iterator(); it.hasNext(); ) {
+                changed |= remove(it.next());
+            }
+            return changed;
+        }
+
+        @Override
+        public boolean removeAll(long[] array) {
+            boolean changed = false;
+            for (long value : array) {
+                changed |= remove(value);
+            }
+            return changed;
+        }
+
+        @Override
+        public void clear() {
+            AgronaLongObjectMap.this.clear();
+        }
+
+        @Override
+        public boolean forEach(TLongProcedure procedure) {
+            for (TLongIterator it = iterator(); it.hasNext(); ) {
+                if (!procedure.execute(it.next())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof TLongSet) {
+                TLongSet other = (TLongSet) obj;
+                return size() == other.size() && containsAll(other);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 0;
+            for (TLongIterator it = iterator(); it.hasNext(); ) {
+                hash += Long.hashCode(it.next());
+            }
+            return hash;
+        }
+    }
+
+    private static final class KeyIterator implements TLongIterator {
+        private final Iterator<? extends Map.Entry<Long, ?>> iterator;
+        private Map.Entry<Long, ?> current;
+
+        private KeyIterator(Iterator<? extends Map.Entry<Long, ?>> iterator) {
+            this.iterator = iterator;
+        }
+
+        @Override
+        public long next() {
+            current = iterator.next();
+            return current.getKey();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public void remove() {
+            if (current == null) {
+                throw new IllegalStateException("next() must be called before remove()");
+            }
+            iterator.remove();
+            current = null;
+        }
+    }
+
+    private final class LiveValueCollection extends AbstractCollection<V> {
+        @Override
+        public Iterator<V> iterator() {
+            return new ValueIterator<>(delegate.entrySet().iterator());
+        }
+
+        @Override
+        public int size() {
+            return AgronaLongObjectMap.this.size();
+        }
+
+        @Override
+        public boolean contains(Object value) {
+            return AgronaLongObjectMap.this.containsValue(value);
+        }
+
+        @Override
+        public boolean remove(Object value) {
+            Iterator<Map.Entry<Long, V>> iterator = delegate.entrySet().iterator();
+            while (iterator.hasNext()) {
+                if (Objects.equals(iterator.next().getValue(), value)) {
+                    iterator.remove();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void clear() {
+            AgronaLongObjectMap.this.clear();
+        }
+    }
+
+    private static final class ValueIterator<V> implements Iterator<V> {
+        private final Iterator<Map.Entry<Long, V>> iterator;
+        private Map.Entry<Long, V> current;
+
+        private ValueIterator(Iterator<Map.Entry<Long, V>> iterator) {
+            this.iterator = iterator;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public V next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            current = iterator.next();
+            return current.getValue();
+        }
+
+        @Override
+        public void remove() {
+            if (current == null) {
+                throw new IllegalStateException("next() must be called before remove()");
+            }
+            iterator.remove();
+            current = null;
         }
     }
 

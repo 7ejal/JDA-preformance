@@ -549,7 +549,8 @@ val compileJava by tasks.getting(JavaCompile::class) {
 }
 
 tasks.named<JavaCompile>("compileTestJava8Java") {
-    options.release = 8
+    options.release = 17
+    enabled = false
 }
 
 tasks.named<JavaCompile>("compileExamplesJava") {
@@ -629,11 +630,11 @@ val testJava8Compatibility by tasks.registering(Test::class) {
     classpath = testJava8.runtimeClasspath
 
     javaLauncher = java8Toolchain.get()
+    enabled = false
 }
 
-tasks.named("check").configure {
-    dependsOn(testJava8Compatibility)
-}
+// This private MusicBot fork targets Java 17+ because the Agrona cache maps use Agrona 2.x.
+// Do not wire the upstream Java 8 compatibility suite into the normal build.
 
 val verifyBytecodeVersion by tasks.registering(VerifyBytecodeVersion::class) {
     group = "verification"

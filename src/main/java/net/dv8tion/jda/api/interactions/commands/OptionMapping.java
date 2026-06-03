@@ -17,7 +17,6 @@
 package net.dv8tion.jda.api.interactions.commands;
 
 import gnu.trove.map.TLongObjectMap;
-import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -29,6 +28,7 @@ import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.entities.InteractionMentions;
 import net.dv8tion.jda.internal.utils.EntityString;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 
 import java.util.Objects;
 

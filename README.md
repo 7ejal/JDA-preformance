@@ -29,6 +29,14 @@
 
 # JDA (Java Discord API)
 
+## MusicBot private fork notes
+
+This fork contains a safe `AgronaLongObjectMap` adapter for the MusicBot JDA build.
+The adapter is now tested against Trove behavior for backed views and removals, but
+the standalone micro-benchmark does **not** prove it is faster than
+`TLongObjectHashMap`. Do not expand it into more extremely hot lookup paths unless
+real MusicBot profiling shows a measurable win.
+
 This open source library is intended for implementing bots on Discord using the real-time gateway and REST API. It provides event based functionality to implement bots of any kind, allowing for effective and scalable applications.
 
 ## 📖 Overview

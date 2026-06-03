@@ -17,7 +17,6 @@
 package net.dv8tion.jda.internal.requests;
 
 import gnu.trove.map.TLongObjectMap;
-import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.utils.MiscUtil;
 import net.dv8tion.jda.api.utils.data.DataArray;
@@ -26,6 +25,7 @@ import net.dv8tion.jda.internal.entities.EntityBuilder;
 import net.dv8tion.jda.internal.entities.GuildImpl;
 import net.dv8tion.jda.internal.entities.MemberImpl;
 import net.dv8tion.jda.internal.utils.Helpers;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 
 import java.util.ArrayList;
 import java.util.List;

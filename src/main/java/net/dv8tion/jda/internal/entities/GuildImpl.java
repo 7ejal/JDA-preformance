@@ -19,7 +19,6 @@ package net.dv8tion.jda.internal.entities;
 import gnu.trove.map.TLongIntMap;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongIntHashMap;
-import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import gnu.trove.set.TLongSet;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.Region;
@@ -83,6 +82,7 @@ import net.dv8tion.jda.internal.requests.restaction.pagination.AuditLogPaginatio
 import net.dv8tion.jda.internal.requests.restaction.pagination.BanPaginationActionImpl;
 import net.dv8tion.jda.internal.utils.*;
 import net.dv8tion.jda.internal.utils.cache.*;
+import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import net.dv8tion.jda.internal.utils.concurrent.task.GatewayTask;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
