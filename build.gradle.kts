@@ -60,6 +60,9 @@ plugins {
 //                                //
 ////////////////////////////////////
 
+val exampleJavaVersion = JavaLanguageVersion.of(25)
+val libraryJavaVersion = JavaLanguageVersion.of(8)
+
 projectEnvironment {
     version = Version(major = "6", minor = "4", revision = "1", classifier = null)
 }
@@ -147,12 +150,12 @@ val testJava8 by sourceSets.creating {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
+        languageVersion.set(exampleJavaVersion)
     }
 }
 
 val java8Toolchain = javaToolchains.launcherFor {
-    languageVersion.set(JavaLanguageVersion.of(8))
+    languageVersion.set(libraryJavaVersion)
     vendor.set(JvmVendorSpec.ADOPTIUM)
 }
 
@@ -217,13 +220,6 @@ dependencies {
 
     //Audio crypto libraries
     implementation(libs.tink)
-
-    //Sets the dependencies for the examples
-    configurations["examplesImplementation"].withDependencies {
-        addAll(configurations["api"].allDependencies)
-        addAll(configurations["implementation"].allDependencies)
-        addAll(configurations["compileOnly"].allDependencies)
-    }
 
     examplesImplementation(libs.jdave)
 
