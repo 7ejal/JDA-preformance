@@ -17,6 +17,7 @@
 package net.dv8tion.jda.internal.utils.cache;
 
 import gnu.trove.map.TLongObjectMap;
+import gnu.trove.map.hash.TLongObjectHashMap;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.utils.ClosableIterator;
@@ -26,7 +27,6 @@ import net.dv8tion.jda.api.utils.cache.ChannelCacheView;
 import net.dv8tion.jda.internal.utils.Checks;
 import net.dv8tion.jda.internal.utils.Helpers;
 import net.dv8tion.jda.internal.utils.UnlockHook;
-import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -46,7 +46,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
             channelType = normalizeKey(channelType);
             Class<? extends Channel> clazz = channelType.getInterface();
             if (channelType != ChannelType.UNKNOWN && type.isAssignableFrom(clazz)) {
-                caches.put(channelType, new AgronaLongObjectMap<>());
+                caches.put(channelType, new TLongObjectHashMap<>());
             }
         }
     }

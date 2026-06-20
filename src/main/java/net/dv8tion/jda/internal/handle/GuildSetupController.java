@@ -18,6 +18,7 @@ package net.dv8tion.jda.internal.handle;
 
 import gnu.trove.iterator.TLongObjectIterator;
 import gnu.trove.map.TLongObjectMap;
+import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import net.dv8tion.jda.api.events.guild.GuildTimeoutEvent;
@@ -29,7 +30,6 @@ import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.requests.MemberChunkManager;
 import net.dv8tion.jda.internal.requests.WebSocketClient;
 import net.dv8tion.jda.internal.utils.JDALogger;
-import net.dv8tion.jda.internal.utils.collections.AgronaLongObjectMap;
 import org.slf4j.Logger;
 
 import java.util.HashSet;
@@ -49,7 +49,7 @@ public class GuildSetupController {
     private static final int timeoutThreshold = 60; // Half of 120 rate limit
 
     private final JDAImpl api;
-    private final TLongObjectMap<GuildSetupNode> setupNodes = new AgronaLongObjectMap<>();
+    private final TLongObjectMap<GuildSetupNode> setupNodes = new TLongObjectHashMap<>();
     private final TLongSet chunkingGuilds = new TLongHashSet();
     private final TLongSet unavailableGuilds = new TLongHashSet();
 
